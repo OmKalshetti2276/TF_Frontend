@@ -58,6 +58,9 @@ export default {
           dark: "hsl(var(--aqua-dark))",
           "dark-surface": "hsl(var(--aqua-dark-surface))",
           "dark-foreground": "hsl(var(--aqua-dark-foreground))",
+          yellow: "hsl(var(--aqua-yellow))",
+          red: "hsl(var(--aqua-red))",
+          gray: "hsl(var(--aqua-gray))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -88,11 +91,16 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "flow-glow": {
+          "0%, 100%": { filter: "drop-shadow(0 0 4px hsl(210 60% 52% / 0.6))" },
+          "50%": { filter: "drop-shadow(0 0 12px hsl(210 60% 52% / 0.9))" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "flow-glow": "flow-glow 2s ease-in-out infinite",
       },
     },
   },

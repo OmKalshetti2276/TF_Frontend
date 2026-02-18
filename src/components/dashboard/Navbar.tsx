@@ -1,12 +1,18 @@
-import { Bell, Droplets, Menu } from "lucide-react";
+import { Bell, Droplets, Menu, ChevronDown, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const navItems = ["Dashboard", "Nodes", "Analytics", "Irrigation Logs", "Weather", "Settings"];
+const navItems = ["Dashboard", "Farms", "Irrigation Control", "Analytics", "Weather", "Devices", "Settings"];
 
 const Navbar = () => {
   const [active, setActive] = useState("Dashboard");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle("dark");
+  };
 
   return (
     <nav className="sticky top-0 z-50 card-glass shadow-card">
@@ -21,7 +27,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-1">
             {navItems.map((item) => (
               <button
                 key={item}
@@ -46,7 +52,21 @@ const Navbar = () => {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Farm Selector */}
+            <button className="hidden sm:flex items-center gap-1.5 rounded-xl bg-muted/50 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              🌾 Farm Alpha
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors"
+            >
+              {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
+
             <button className="relative rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
@@ -55,7 +75,7 @@ const Navbar = () => {
               FM
             </div>
             <button
-              className="md:hidden rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors"
+              className="lg:hidden rounded-xl p-2 text-muted-foreground hover:bg-muted transition-colors"
               onClick={() => setMobileOpen(!mobileOpen)}
             >
               <Menu className="h-5 w-5" />
@@ -71,7 +91,7 @@ const Navbar = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden overflow-hidden border-t border-border"
+            className="lg:hidden overflow-hidden border-t border-border"
           >
             <div className="px-4 py-3 space-y-1">
               {navItems.map((item) => (

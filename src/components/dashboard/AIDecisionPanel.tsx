@@ -7,29 +7,33 @@ interface Decision {
   reason: string;
   timestamp: string;
   type: "recommended" | "skip" | "monitor";
+  confidence: number;
 }
 
 const decisions: Decision[] = [
   {
-    field: "Field A",
-    action: "Irrigation Recommended",
-    reason: "Low soil moisture + High evapotranspiration rate",
+    field: "Zone A",
+    action: "Irrigate for 25 min",
+    reason: "Low soil moisture (42%) + High evapotranspiration rate",
     timestamp: "10 min ago",
     type: "recommended",
+    confidence: 94,
   },
   {
-    field: "Field B",
+    field: "Zone B",
     action: "Skip Irrigation",
-    reason: "Rain expected in 2 hours – probability 85%",
+    reason: "Rain forecast in 2 hours – probability 85%",
     timestamp: "25 min ago",
     type: "skip",
+    confidence: 87,
   },
   {
-    field: "Field C",
+    field: "Zone C",
     action: "Monitor Only",
     reason: "Soil moisture within optimal range, stable forecast",
     timestamp: "1 hour ago",
     type: "monitor",
+    confidence: 91,
   },
 ];
 
@@ -82,7 +86,12 @@ const AIDecisionPanel = () => {
                   <p className="font-semibold text-sm text-aqua-dark-foreground">
                     {d.field} – {d.action}
                   </p>
-                  <span className="text-xs text-aqua-dark-foreground/50 whitespace-nowrap ml-2">{d.timestamp}</span>
+                  <div className="flex items-center gap-2 ml-2">
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                      {d.confidence}% conf
+                    </span>
+                    <span className="text-xs text-aqua-dark-foreground/50 whitespace-nowrap">{d.timestamp}</span>
+                  </div>
                 </div>
                 <p className="text-xs text-aqua-dark-foreground/60 mt-0.5">{d.reason}</p>
               </div>
