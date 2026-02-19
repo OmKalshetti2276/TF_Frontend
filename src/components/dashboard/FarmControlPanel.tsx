@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { predictZone } from "@/services/api"; // ✅ Added
+import { predictZone } from "@/services/api";
 import {
   Thermometer, Droplets, Wind, Sun, CloudRain, Gauge,
-  Power, Zap, CircleDot, X
+  Power
 } from "lucide-react";
 
 type ZoneStatus = "irrigated" | "scheduled" | "needs-irrigation" | "offline";
@@ -15,37 +15,13 @@ interface Zone {
   flowRate: string;
   status: ZoneStatus;
   aiRecommendation: string;
-  predictedMoisture?: number;
-  recommendedSeconds?: number;
 }
-
 
 const initialZones: Zone[] = [
   { name: "Zone A", moisture: 42, valveOpen: true, flowRate: "12 L/min", status: "irrigated", aiRecommendation: "Irrigating" },
   { name: "Zone B", moisture: 68, valveOpen: false, flowRate: "0 L/min", status: "scheduled", aiRecommendation: "Scheduled 2:00 PM" },
   { name: "Zone C", moisture: 28, valveOpen: false, flowRate: "0 L/min", status: "needs-irrigation", aiRecommendation: "Urgent: Low moisture" },
 ];
-
-const statusColors: Record<ZoneStatus, string> = {
-  irrigated: "border-primary bg-primary/10",
-  scheduled: "border-aqua-yellow bg-aqua-yellow/10",
-  "needs-irrigation": "border-destructive bg-destructive/10",
-  offline: "border-aqua-gray bg-muted",
-};
-
-const statusBadgeColors: Record<ZoneStatus, string> = {
-  irrigated: "bg-primary/15 text-primary",
-  scheduled: "bg-aqua-yellow/15 text-aqua-yellow",
-  "needs-irrigation": "bg-destructive/15 text-destructive",
-  offline: "bg-muted text-muted-foreground",
-};
-
-const statusLabels: Record<ZoneStatus, string> = {
-  irrigated: "Irrigated",
-  scheduled: "Scheduled",
-  "needs-irrigation": "Needs Irrigation",
-  offline: "Offline",
-};
 
 const weatherStation = [
   { label: "Temperature", value: "28°C", icon: Thermometer },
@@ -59,58 +35,48 @@ const weatherStation = [
 const FarmControlPanel = () => {
   const [zones, setZones] = useState(initialZones);
   const [pumpOn, setPumpOn] = useState(true);
-  const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
 
-  // ✅ AI Decision Integration
-  // ✅ AI Decision Integration (Aligned with Backend)
-const runAIDecision = async (index: number) => {
-  try {
-    const zone = zones[index];
+  const runAIDecision = async (index: number) => {
+    try {
+      const zone = zones[index];
 
-    const response = await predictZone({
-      soil_moisture: zone.moisture,
-      soil_moisture_lag1: zone.moisture,
-      latitude: 18.52,
-      longitude: 73.85,
-      soil_type: "loamy",
-      slope: "flat",
-      crop_kc: 1.1,
-      calibration_factor: 4
-    });
+      const response = await predictZone({
+        soil_moisture: zone.moisture,
+        soil_moisture_lag1: zone.moisture,
+        latitude: 18.52,
+        longitude: 73.85,
+        soil_type: "loamy",
+        slope: "flat",
+        crop_kc: 1.1,
+        calibration_factor: 4
+      });
 
-    setZones(prev =>
-      prev.map((z, i) =>
-        i === index
-          ? {
-              ...z,
-              moisture: response.predicted_moisture ?? z.moisture,
-              status:
-                response.action === "IRRIGATE"
-                  ? "irrigated"
-                  : "scheduled",
-              aiRecommendation:
-                response.action === "IRRIGATE"
-                  ? `Irrigate for ${response.recommended_valve_seconds ?? 0}s`
-                  : "No irrigation required",
-            }
-          : z
-      )
-    );
+      setZones(prev =>
+        prev.map((z, i) =>
+          i === index
+            ? {
+                ...z,
+                moisture: response.predicted_moisture ?? z.moisture,
+                status: response.action === "IRRIGATE" ? "irrigated" : "scheduled",
+                aiRecommendation:
+                  response.action === "IRRIGATE"
+                    ? `Irrigate for ${response.recommended_valve_seconds ?? 0}s`
+                    : "No irrigation required",
+              }
+            : z
+        )
+      );
+    } catch (error) {
+      console.error("AI error:", error);
+    }
+  };
 
-  } catch (error) {
-    console.error("AI error:", error);
-  }
-};
-
-
-  // ✅ Updated Valve Toggle
   const toggleValve = async (index: number) => {
     setZones(prev =>
       prev.map((z, i) =>
         i === index ? { ...z, valveOpen: !z.valveOpen } : z
       )
     );
-
     await runAIDecision(index);
   };
 
@@ -126,8 +92,8 @@ const runAIDecision = async (index: number) => {
       </h2>
 
       <div className="grid grid-cols-1 xl:grid-cols-[200px_1fr_200px] gap-5">
-        
-        {/* Weather Station - Left */}
+
+        {/* Weather Station */}
         <div className="rounded-2xl bg-secondary/10 p-4 space-y-3">
           <h3 className="font-display text-sm font-bold text-secondary flex items-center gap-2">
             <CloudRain className="h-4 w-4" /> Weather Station
@@ -138,18 +104,60 @@ const runAIDecision = async (index: number) => {
                 <w.icon className="h-3.5 w-3.5 text-secondary" />
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground leading-none">{w.label}</p>
+                <p className="text-[10px] text-muted-foreground">{w.label}</p>
                 <p className="text-sm font-bold text-card-foreground">{w.value}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Center and Pump sections remain EXACTLY SAME */}
-        {/* I did NOT modify anything below visually */}
+        {/* Zones */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {zones.map((zone, i) => (
+            <div
+              key={zone.name}
+              className="rounded-2xl border-2 p-4"
+            >
+              <h4 className="font-bold mb-2">{zone.name}</h4>
 
-        {/* --- YOUR ENTIRE ORIGINAL UI CODE CONTINUES UNCHANGED --- */}
-        {/* (Omitted here for brevity explanation — but in your file, leave everything exactly as before) */}
+              <div className="text-sm mb-1">
+                Soil Moisture: {zone.moisture}%
+              </div>
+
+              <div className="text-sm mb-1">
+                Flow Rate: {zone.flowRate}
+              </div>
+
+              <div className="text-xs mb-2">
+                🤖 {zone.aiRecommendation}
+              </div>
+
+              <button
+                onClick={() => toggleValve(i)}
+                className="w-full rounded-xl py-2 text-xs font-semibold bg-muted"
+              >
+                Valve: {zone.valveOpen ? "Open" : "Closed"}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Pump */}
+        <div className="rounded-2xl bg-muted/50 p-4 space-y-4">
+          <h3 className="font-bold">⚙️ Pump Control</h3>
+
+          <div className="flex flex-col items-center gap-3">
+            <Power className={`h-7 w-7 ${pumpOn ? "text-green-500" : "text-red-500"}`} />
+            <span>{pumpOn ? "RUNNING" : "OFF"}</span>
+          </div>
+
+          <button
+            onClick={() => setPumpOn(!pumpOn)}
+            className="w-full rounded-xl py-2 text-xs font-semibold bg-muted"
+          >
+            {pumpOn ? "Stop Pump" : "Start Pump"}
+          </button>
+        </div>
 
       </div>
     </motion.div>
