@@ -15,3 +15,13 @@ export async function predictZone(data: any): Promise<PredictionResponse> {
   const response = await API.post("/predict", data);
   return response.data;
 }
+
+export const getZones = async () => {
+  const res = await API.get("/zones");
+  return res.data;
+};
+
+export const getHistory = async () => {
+  const res = await API.get("/history");
+  return res.data;
+};

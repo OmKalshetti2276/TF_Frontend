@@ -1,30 +1,53 @@
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from "recharts";
-
-const moistureData = [
-  { day: "Mon", current: 58, target: 65 },
-  { day: "Tue", current: 62, target: 65 },
-  { day: "Wed", current: 55, target: 65 },
-  { day: "Thu", current: 67, target: 65 },
-  { day: "Fri", current: 63, target: 65 },
-  { day: "Sat", current: 60, target: 65 },
-  { day: "Sun", current: 64, target: 65 },
-];
-
-const waterData = [
-  { day: "Mon", usage: 180 },
-  { day: "Tue", usage: 200 },
-  { day: "Wed", usage: 150 },
-  { day: "Thu", usage: 220 },
-  { day: "Fri", usage: 170 },
-  { day: "Sat", usage: 140 },
-  { day: "Sun", usage: 160 },
-];
+import { useEffect, useState } from "react";
+import { getHistory } from "@/services/api";
 
 const SoilWaterAnalytics = () => {
+  const [history, setHistory] = useState<any>({});
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const data = await getHistory();
+        setHistory(data);
+      } catch (err) {
+        console.error("History error:", err);
+      }
+    };
+
+    fetchHistory();
+    const interval = setInterval(fetchHistory, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🔹 Convert backend history to chart format (Zone A example)
+  const moistureData =
+    history["Zone B"]?.map((point: any) => ({
+      time: new Date(point.timestamp * 1000).toLocaleTimeString(),
+      current: point.moisture,
+      target: 65, // fixed target for visualization
+    })) || [];
+
+  const waterData =
+    history["Zone B"]?.map((point: any) => ({
+      time: new Date(point.timestamp * 1000).toLocaleTimeString(),
+      usage: point.flow_rate,
+    })) || [];
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Soil Moisture Trend */}
@@ -39,9 +62,19 @@ const SoilWaterAnalytics = () => {
         </h2>
         <ResponsiveContainer width="100%" height={240}>
           <LineChart data={moistureData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 18% 90%)" />
-            <XAxis dataKey="day" tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }} />
-            <YAxis tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }} domain={[40, 80]} unit="%" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(220 18% 90%)"
+            />
+            <XAxis
+              dataKey="time"
+              tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }}
+              domain={[20, 80]}
+              unit="%"
+            />
             <Tooltip
               contentStyle={{
                 borderRadius: "12px",
@@ -56,7 +89,7 @@ const SoilWaterAnalytics = () => {
               dataKey="current"
               stroke="hsl(152 55% 42%)"
               strokeWidth={2.5}
-              dot={{ r: 4, fill: "hsl(152 55% 42%)" }}
+              dot={false}
               name="Current Moisture"
             />
             <Line
@@ -84,14 +117,23 @@ const SoilWaterAnalytics = () => {
             Water Usage
           </h2>
           <span className="flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground">
-            <TrendingUp className="h-3 w-3" /> +12% efficiency
+            <TrendingUp className="h-3 w-3" /> Live
           </span>
         </div>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={waterData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 18% 90%)" />
-            <XAxis dataKey="day" tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }} />
-            <YAxis tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }} unit="L" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(220 18% 90%)"
+            />
+            <XAxis
+              dataKey="time"
+              tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }}
+            />
+            <YAxis
+              tick={{ fontSize: 12, fill: "hsl(220 15% 50%)" }}
+              unit="L"
+            />
             <Tooltip
               contentStyle={{
                 borderRadius: "12px",
@@ -100,11 +142,28 @@ const SoilWaterAnalytics = () => {
                 fontSize: "12px",
               }}
             />
-            <Bar dataKey="usage" fill="url(#barGradient)" radius={[8, 8, 0, 0]} name="Water (L)" />
+            <Bar
+              dataKey="usage"
+              fill="url(#barGradient)"
+              radius={[8, 8, 0, 0]}
+              name="Water (L)"
+            />
             <defs>
-              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(152 55% 42%)" />
-                <stop offset="100%" stopColor="hsl(210 60% 52%)" />
+              <linearGradient
+                id="barGradient"
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
+                  stopColor="hsl(152 55% 42%)"
+                />
+                <stop
+                  offset="100%"
+                  stopColor="hsl(210 60% 52%)"
+                />
               </linearGradient>
             </defs>
           </BarChart>

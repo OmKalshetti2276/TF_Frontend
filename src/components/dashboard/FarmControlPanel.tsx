@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { predictZone } from "@/services/api";
+import { useState,useEffect } from "react";
+import { getZones } from "@/services/api";
 import {
   Thermometer, Droplets, Wind, Sun, CloudRain, Gauge,
   Power
@@ -15,6 +15,11 @@ interface Zone {
   flowRate: string;
   status: ZoneStatus;
   aiRecommendation: string;
+
+  last_decision?: string;
+  predicted_moisture?: number;
+  recommended_seconds?: number;
+  confidence?: number;
 }
 
 const initialZones: Zone[] = [
@@ -33,52 +38,54 @@ const weatherStation = [
 ];
 
 const FarmControlPanel = () => {
-  const [zones, setZones] = useState(initialZones);
+  const [zones, setZones] = useState<Zone[]>(initialZones);
   const [pumpOn, setPumpOn] = useState(true);
 
-  const runAIDecision = async (index: number) => {
+  const convertBackendZones = (data: any): Zone[] => {
+  return Object.entries(data).map(([name, zone]: any) => ({
+    name,
+    moisture: zone.moisture,
+    valveOpen: zone.valve_open,
+    flowRate: `${zone.flow_rate} L/min`,
+
+    status:
+      zone.moisture < 35
+        ? "needs-irrigation"
+        : zone.valve_open
+        ? "irrigated"
+        : "scheduled",
+
+    aiRecommendation:
+      zone.last_decision === "IRRIGATE"
+        ? `Irrigate for ${zone.recommended_seconds}s`
+        : "No irrigation required",
+
+    last_decision: zone.last_decision,
+    predicted_moisture: zone.predicted_moisture,
+    recommended_seconds: zone.recommended_seconds,
+    confidence: zone.confidence
+  }));
+};
+  useEffect(() => {
+  const fetchZones = async () => {
     try {
-      const zone = zones[index];
-
-      const response = await predictZone({
-        soil_moisture: zone.moisture,
-        soil_moisture_lag1: zone.moisture,
-        latitude: 18.52,
-        longitude: 73.85,
-        soil_type: "loamy",
-        slope: "flat",
-        crop_kc: 1.1,
-        calibration_factor: 4
-      });
-
-      setZones(prev =>
-        prev.map((z, i) =>
-          i === index
-            ? {
-                ...z,
-                moisture: response.predicted_moisture ?? z.moisture,
-                status: response.action === "IRRIGATE" ? "irrigated" : "scheduled",
-                aiRecommendation:
-                  response.action === "IRRIGATE"
-                    ? `Irrigate for ${response.recommended_valve_seconds ?? 0}s`
-                    : "No irrigation required",
-              }
-            : z
-        )
-      );
-    } catch (error) {
-      console.error("AI error:", error);
+      const data = await getZones();
+      const formatted = convertBackendZones(data);
+      setZones(formatted);
+    } catch (err) {
+      console.error("Zone fetch error:", err);
     }
   };
 
-  const toggleValve = async (index: number) => {
-    setZones(prev =>
-      prev.map((z, i) =>
-        i === index ? { ...z, valveOpen: !z.valveOpen } : z
-      )
-    );
-    await runAIDecision(index);
-  };
+  fetchZones();
+  const interval = setInterval(fetchZones, 5000);
+
+  return () => clearInterval(interval);
+  }, []);
+  
+
+  
+  
 
   return (
     <motion.div
@@ -132,12 +139,12 @@ const FarmControlPanel = () => {
                 🤖 {zone.aiRecommendation}
               </div>
 
-              <button
-                onClick={() => toggleValve(i)}
-                className="w-full rounded-xl py-2 text-xs font-semibold bg-muted"
-              >
-                Valve: {zone.valveOpen ? "Open" : "Closed"}
-              </button>
+             <button
+  disabled
+  className="w-full rounded-xl py-2 text-xs font-semibold bg-muted"
+>
+  Valve: {zone.valveOpen ? "Open" : "Closed"}
+</button>
             </div>
           ))}
         </div>
