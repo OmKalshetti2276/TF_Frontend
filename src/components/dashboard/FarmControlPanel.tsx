@@ -228,23 +228,23 @@ const FarmControlPanel = () => {
           ).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
         </td>
         
-        <td className="px-2 py-3">
+        <td className="px-4 py-3">
           {record.input_features?.soil_moisture_current ?? "N/A"}%
         </td>
         
-        <td className="px-2 py-3">
+        <td className="px-4 py-3">
           <span className={`px-2 py-1 rounded text-xs font-bold ${record.decision?.action === "IRRIGATE" ? "bg-blue-500/20 text-blue-500" : "bg-gray-500/20 text-gray-500"}`}>
             {record.decision?.action || "NONE"}
           </span>
         </td>
         
-        <td className="px-2 py-3">
+        <td className="px-4 py-3">
           {record.decision?.recommended_valve_seconds !== undefined 
             ? `${record.decision.recommended_valve_seconds}s` 
             : "—"}
         </td>
         
-        <td className="px-2 py-3">
+        <td className="px-4 py-3">
           {record.model_output?.predicted_moisture 
             ? `${record.model_output.predicted_moisture.toFixed(1)}%` 
             : "N/A"}
