@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "https://web-production-2218a.up.railway.app"
-,
+  baseURL: "https://smart-irrigation-api-cvo6.onrender.com",
 });
 
 export interface PredictionResponse {
